@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@middy/core": "^3.4.0",
-    "@middy/http-json-body-parser": "^3.4.0"
+    "@middy/http-json-body-parser": "^3.4.0",
+    "@types/serverless-jest-plugin": "^0.3.0"
   },
   "devDependencies": {
     "@serverless/typescript": "^3.0.0",
@@ -24,6 +25,10 @@
     "serverless": "^3.0.0",
     "serverless-auto-swagger": "^2.12.0",
     "serverless-esbuild": "^1.23.3",
+    "serverless-jest-plugin": "^0.4.0",
+    "serverless-mocha-plugin": "^1.12.0",
+    "serverless-offline": "^12.0.4",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.4.0",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^4.1.3"

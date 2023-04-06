@@ -12,6 +12,7 @@ export const formatJSONResponse = (response: any, status?: number) => {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Credentials": true,
+      'Content-Type': 'application/json'
     },
   }
 }
