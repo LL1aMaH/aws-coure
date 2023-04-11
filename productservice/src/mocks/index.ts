@@ -5,7 +5,7 @@ type Product = {
   price: number,
 }
 
-export const products: Promise<Product[]> = Promise.resolve([
+export const productsData = [
   {
     description: "Short Product Description1",
     id: "7567ec4b-b10c-48c5-9345-fc73c48a80aa",
@@ -42,4 +42,6 @@ export const products: Promise<Product[]> = Promise.resolve([
     price: 15,
     title: "ProductName",
   },
-]);
+];
+
+export const products: Promise<Product[]> = Promise.resolve(productsData);

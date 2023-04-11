@@ -4,3 +4,12 @@ export type Product = {
   description: string,
   price: number,
 };
+
+export interface ErrorResponse {
+  message: string;
+}
+
+export interface Stock {
+  product_id: string;
+  count: number;
+}
