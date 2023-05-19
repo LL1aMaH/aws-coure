@@ -4,8 +4,10 @@ import { S3Client, GetObjectCommand, CopyObjectCommand, DeleteObjectCommand } fr
 import { Readable } from 'stream';
 import { Commands } from 'src/types';
 import { getCommand } from '@functions/helpers';
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
 
 const client = new S3Client({ region: 'us-east-1' });
+const sqsClient = new SQSClient({ region: 'us-east-1' });
 
 const importFileParser = async (event: S3Event): Promise<void> => {
   for (const record of event.Records) {
@@ -18,7 +20,11 @@ const importFileParser = async (event: S3Event): Promise<void> => {
       const stream = (response.Body as Readable).pipe(csv());
 
       for await (const data of stream) {
-        console.log(data);
+        const command = new SendMessageCommand({
+          QueueUrl: process.env.SQS_URL,
+          MessageBody: JSON.stringify(data),
+        });
+        await sqsClient.send(command);
       }
 
       await client.send(doCommand(Commands.copy) as CopyObjectCommand);

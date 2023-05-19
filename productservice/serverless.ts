@@ -3,6 +3,7 @@ import type { AWS } from '@serverless/typescript';
 import getProductList from '@functions/getProductList';
 import getProductsById from '@functions/getProductsById';
 import createProduct from '@functions/createProduct';
+import catalogBatchProcess from '@functions/catalogBatchProcess';
 
 const serverlessConfiguration: AWS = {
   service: 'aws-coure',
@@ -20,23 +21,40 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
-      PRODUCTS_TABLE_NAME: '${env:DYNAMODB_PRODUCTS_TABLE}',
-      STOCKS_TABLE_NAME: '${env:DYNAMODB_STOCKS_TABLE}',
+      // PRODUCTS_TABLE_NAME: '${env:PRODUCTS_TABLE_NAME}',
+      // STOCKS_TABLE_NAME: '${env:STOCKS_TABLE_NAME}',
+      SNS_ARN: {
+        Ref: 'SNSTopic',
+      },
     },
     iam: {
       role: { 
         statements: [
+          // {
+          //   Effect: 'Allow',
+          //   Action: 'dynamodb:*',
+          //   Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/*',
+          // },
           {
             Effect: 'Allow',
-            Action: 'dynamodb:*',
-            Resource: 'arn:aws:dynamodb:${self:provider.region}:*:table/*',
+            Action: 'sqs:*',
+            Resource: {
+              'Fn::GetAtt': ['SQSQueue', 'Arn'],
+            },
+          },
+          {
+            Effect: 'Allow',
+            Action: 'sns:*',
+            Resource: {
+              Ref: 'SNSTopic',
+            },
           },
         ]
       },
     }
   },
   // import the function via paths
-  functions: { getProductList, getProductsById, createProduct },
+  functions: { getProductList, getProductsById, createProduct, catalogBatchProcess },
   package: { individually: true },
   custom: {
     esbuild: {
@@ -61,50 +79,85 @@ const serverlessConfiguration: AWS = {
   },
     resources: {
       Resources: {
-        products: {
-          Type: "AWS::DynamoDB::Table",
+        // products: {
+        //   Type: "AWS::DynamoDB::Table",
+        //   Properties: {
+        //     TableName: '${env:DYNAMODB_PRODUCTS_TABLE}',
+        //     KeySchema: [
+        //       {
+        //         KeyType: "HASH",
+        //         AttributeName: "id"
+        //       }
+        //     ],
+        //     AttributeDefinitions: [
+        //       {
+        //         AttributeName: "id",
+        //         AttributeType: "S"
+        //       }
+        //     ],
+        //     ProvisionedThroughput: {
+        //       ReadCapacityUnits: 1,
+        //       WriteCapacityUnits: 1
+        //     }  
+        //   }
+        // },  
+        // stocks: {
+        //   Type: "AWS::DynamoDB::Table",
+        //   Properties: {
+        //     TableName:'${env:DYNAMODB_STOCKS_TABLE}',
+        //     KeySchema: [
+        //       {
+        //         KeyType: "HASH",
+        //         AttributeName: "product_id"
+        //       }
+        //     ],
+        //     AttributeDefinitions: [
+        //       {
+        //         AttributeName: "product_id",
+        //         AttributeType: "S"
+        //       }
+        //     ],
+        //     ProvisionedThroughput: {
+        //       ReadCapacityUnits: 1,
+        //       WriteCapacityUnits: 1
+        //     }    
+        //   }
+        // }  
+        SQSQueue: {
+          Type: 'AWS::SQS::Queue',
           Properties: {
-            TableName: '${env:DYNAMODB_PRODUCTS_TABLE}',
-            KeySchema: [
-              {
-                KeyType: "HASH",
-                AttributeName: "id"
-              }
-            ],
-            AttributeDefinitions: [
-              {
-                AttributeName: "id",
-                AttributeType: "S"
-              }
-            ],
-            ProvisionedThroughput: {
-              ReadCapacityUnits: 5,
-              WriteCapacityUnits: 5
-            }  
-          }
-        },  
-        stocks: {
-          Type: "AWS::DynamoDB::Table",
+            QueueName: '${env:SQS_NAME}',
+          },
+        },
+        SNSTopic: {
+          Type: 'AWS::SNS::Topic',
           Properties: {
-            TableName:'${env:DYNAMODB_STOCKS_TABLE}',
-            KeySchema: [
-              {
-                KeyType: "HASH",
-                AttributeName: "product_id"
-              }
-            ],
-            AttributeDefinitions: [
-              {
-                AttributeName: "product_id",
-                AttributeType: "S"
-              }
-            ],
-            ProvisionedThroughput: {
-              ReadCapacityUnits: 5,
-              WriteCapacityUnits: 5
-            }    
-          }
-        }  
+            TopicName: '${env:SNS_TOPIC_NAME}',
+          },
+        },
+        SNSSubscription: {
+          Type: 'AWS::SNS::Subscription',
+          Properties: {
+            Endpoint: '${env:EMAIL}',
+            Protocol: 'email',
+            TopicArn: {
+              Ref: 'SNSTopic',
+            },
+          },
+        },
+        SNSFilteredSubscription: {
+          Type: 'AWS::SNS::Subscription',
+          Properties: {
+            Endpoint: '${env:PRIVATE_EMAIL}',
+            Protocol: 'email',
+            TopicArn: {
+              Ref: 'SNSTopic',
+            },
+            FilterPolicy: {
+              count: [{ numeric: ['<', 5] }],
+            },
+          },
+        },
       }
     }
 };

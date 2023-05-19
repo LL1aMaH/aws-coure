@@ -3,7 +3,6 @@ import type { AWS } from '@serverless/typescript';
 import importProductsFile from '@functions/importProductsFile';
 import importFileParser from '@functions/importFileParser';
 
-
 const serverlessConfiguration: AWS = {
   service: 'import-service',
   frameworkVersion: '3',
@@ -22,9 +21,11 @@ const serverlessConfiguration: AWS = {
       BUCKET_NAME: 'aws-course-bucket-task5',
       FOLDER_NAME: 'uploaded',
       PARSED_FOLDER_NAME: 'parsed',
+      SQS_URL: 'https://sqs.us-east-1.amazonaws.com/662276183930/My-sqs',
+      SQS_ARN: 'arn:aws:sqs:us-east-1:662276183930:My-sqs',
     },
     iam: {
-      role: { 
+      role: {
         statements: [
           {
             Effect: 'Allow',
@@ -36,9 +37,14 @@ const serverlessConfiguration: AWS = {
             Action: 's3:*',
             Resource: 'arn:aws:s3:::aws-course-bucket-task5/*',
           },
-        ]
+          {
+            Effect: 'Allow',
+            Action: 'sqs:*',
+            Resource: '${self:provider.environment.SQS_ARN}',
+          },
+        ],
       },
-    }
+    },
   },
   // import the function via paths
   functions: { importProductsFile, importFileParser },
