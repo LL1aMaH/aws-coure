@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.310.0",
+    "@aws-sdk/client-sns": "^3.332.0",
     "@aws-sdk/util-dynamodb": "^3.309.0",
     "@middy/core": "^3.4.0",
     "@middy/http-json-body-parser": "^3.4.0",
     "@types/serverless-jest-plugin": "^0.3.0",
     "aws-sdk": "^2.1351.0",
+    "uuid": "^9.0.0",
     "yup": "^1.0.2"
   },
   "devDependencies": {
